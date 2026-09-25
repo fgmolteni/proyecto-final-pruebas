@@ -1,0 +1,22 @@
+[project]
+name = "pruebas"
+version = "0.1.0"
+description = "Banco de pruebas del pipeline de imagen del nodo"
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "ipykernel>=7.1.0",
+    "ipywidgets>=8.1.8",
+    "jupyterlab>=4.5.0",
+    "matplotlib>=3.10.0",
+    "numpy>=2.3.0",
+    "pillow>=11.3.0",
+    "scikit-learn>=1.9.1",
+    "tensorflow[and-cuda]>=2.21.0",
+    "kagglehub",
+    # TF 2.21 arrastra cuDNN 9.26, que ya no trae kernels para Pascal: en la GTX 1050
+    # (sm_6.1) cualquier convolución muere con "No algorithm worked! ... cudnn status:
+    # 5003". 9.8.0.87 es la última que sí la soporta. Verificado en esta máquina.
+    # Si se entrena en una GPU Turing o posterior, este pin se puede sacar.
+    "nvidia-cudnn-cu12==9.8.0.87",
+]

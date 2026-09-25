@@ -1,0 +1,19 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Jupyter
+.ipynb_checkpoints/
+
+# datasets e info
+data/
+
+# salidas/ SI se versiona: el proyecto entrega todo el material y los datos generados
+# son parte de la evidencia. Si alguna vez pesa demasiado, ignorar sólo lo grande.

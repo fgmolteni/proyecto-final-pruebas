@@ -1,0 +1,45 @@
+{
+  "entrada": {
+    "scale": 1.0,
+    "zero_point": -128,
+    "shape": [
+      1,
+      96,
+      96,
+      3
+    ]
+  },
+  "salida": {
+    "scale": 0.00390625,
+    "zero_point": -128,
+    "shape": [
+      1,
+      2
+    ]
+  },
+  "grilla": {
+    "scale": 0.00390625,
+    "zero_point": -128,
+    "shape": [
+      1,
+      4,
+      4,
+      2
+    ]
+  },
+  "etiquetas": [
+    "fuego",
+    "humo"
+  ],
+  "bytes": 321584,
+  "decision": {
+    "regla_imagen": "alerta si max(salida_int8[0], salida_int8[1]) >= umbral_salida_int8",
+    "umbral_salida": 0.525,
+    "umbral_salida_int8": 7,
+    "objetivo_perdidas_imagen": 0.05,
+    "regla_grilla": "celda activa si grilla_int8[fila][col][c] >= umbral_grilla_int8",
+    "umbral_grilla": 0.14,
+    "umbral_grilla_int8": -92,
+    "objetivo_perdidas_grilla": 0.1
+  }
+}

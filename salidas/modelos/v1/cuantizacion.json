@@ -1,0 +1,26 @@
+{
+  "entrada": {
+    "scale": 1.0000003576278687,
+    "zero_point": -128,
+    "shape": [
+      1,
+      96,
+      96,
+      3
+    ]
+  },
+  "salida": {
+    "scale": 0.00390625,
+    "zero_point": -128,
+    "shape": [
+      1,
+      3
+    ]
+  },
+  "clases": [
+    "fuego",
+    "humo",
+    "nada"
+  ],
+  "bytes": 316232
+}

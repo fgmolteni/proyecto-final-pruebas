@@ -1,0 +1,31 @@
+{
+  "entrada": {
+    "scale": 1.0,
+    "zero_point": -128,
+    "shape": [
+      1,
+      96,
+      96,
+      3
+    ]
+  },
+  "salida": {
+    "scale": 0.00390625,
+    "zero_point": -128,
+    "shape": [
+      1,
+      2
+    ]
+  },
+  "etiquetas": [
+    "fuego",
+    "humo"
+  ],
+  "bytes": 315936,
+  "decision": {
+    "regla": "alerta si max(salida_int8[0], salida_int8[1]) >= umbral_int8",
+    "umbral": 0.42,
+    "umbral_int8": -20,
+    "objetivo_perdidas_validacion": 0.05
+  }
+}
