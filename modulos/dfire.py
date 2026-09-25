@@ -79,19 +79,20 @@ def particion(splits, seed):
 
 
 # --- Imagenes (TensorFlow) ---------------------------------------------------
-def leer_imagen(ruta):
-    """JPEG -> tensor 96x96x3 uint8: bilineal con antialias y redondeo.
+def leer_imagen(ruta, tam=IMG_SIZE):
+    """JPEG -> tensor `tam` x 3 uint8: bilineal con antialias y redondeo.
 
-    Sin antialias, reducir fotos de hasta 1920x1080 a 96x96 crea aliasing y los
-    penachos finos de humo se pierden.
+    `tam` default IMG_SIZE (96x96, lo que usan los notebooks 4 y 5): el notebook 6
+    pasa (128, 128) explicito. Sin antialias, reducir fotos de hasta 1920x1080
+    crea aliasing y los penachos finos de humo se pierden.
     """
     import tensorflow as tf
-    img = tf.image.resize(tf.io.decode_jpeg(tf.io.read_file(ruta), channels=3), IMG_SIZE,
+    img = tf.image.resize(tf.io.decode_jpeg(tf.io.read_file(ruta), channels=3), tam,
                           antialias=True)
     return tf.cast(tf.round(img), tf.uint8)
 
 
-def armar_ds(archivos, etiquetas, batch, mezclar=False, seed=0):
+def armar_ds(archivos, etiquetas, batch, mezclar=False, seed=0, tam=IMG_SIZE):
     """tf.data de (imagenes float32 0-255, etiquetas float32), en lotes.
 
     uint8 en el cache y float32 recien en el lote: ~415 MB de RAM en vez de ~1,66 GB.
@@ -100,7 +101,7 @@ def armar_ds(archivos, etiquetas, batch, mezclar=False, seed=0):
     """
     import tensorflow as tf
     ds = tf.data.Dataset.from_tensor_slices((archivos, etiquetas))
-    ds = ds.map(lambda r, y: (leer_imagen(r), y), num_parallel_calls=tf.data.AUTOTUNE)
+    ds = ds.map(lambda r, y: (leer_imagen(r, tam), y), num_parallel_calls=tf.data.AUTOTUNE)
     # cache() sobre imagenes sueltas, no lotes: quedan decodificadas en RAM y shuffle
     # arma lotes distintos en cada epoca.
     ds = ds.cache()
@@ -137,8 +138,11 @@ def tabla_cajas(archivos):
     return tabla
 
 
-def mascara_cajas(cajas):
-    """Cajas de UNA imagen (K, 5) -> mascara (H, W, 2) float32 [fuego, humo] a IMG_SIZE.
+def mascara_cajas(cajas, tam=IMG_SIZE):
+    """Cajas de UNA imagen (K, 5) -> mascara `tam` x 2 float32 [fuego, humo].
+
+    `tam` default IMG_SIZE (lo que usan los notebooks 4 y 5); el notebook 6 pasa
+    (128, 128) explicito.
 
     Un pixel vale 1 si cae dentro de alguna caja de ese canal. Los bordes se redondean al
     pixel mas cercano y toda caja ocupa al menos un pixel: un fuego de medio pixel a
@@ -154,14 +158,14 @@ def mascara_cajas(cajas):
         px = tf.range(lado, dtype=tf.float32)
         return (px >= ini[:, None]) & (px < fin[:, None])
 
-    alto, ancho = IMG_SIZE
+    alto, ancho = tam
     en_caja = dentro(y0, y1, alto)[:, :, None] & dentro(x0, x1, ancho)[:, None, :]  # (K, H, W)
     canales = [tf.reduce_any(en_caja & tf.equal(canal, float(c))[:, None, None], axis=0)
                for c in range(len(CLASES))]
     return tf.cast(tf.stack(canales, axis=-1), tf.float32)
 
 
-def objetivos(mascaras, n):
+def objetivos(mascaras, n, tam=IMG_SIZE):
     """Lote de mascaras (B, H, W, 2) -> {"salida": (B, 2), "grilla": (B, n, n, 2)} float32.
 
     La celda vale 1 si tiene al menos un pixel de caja de esa clase (max pooling de
@@ -169,8 +173,8 @@ def objetivos(mascaras, n):
     contradicen nunca, tampoco despues de aumentar imagen y mascara juntas.
     """
     import tensorflow as tf
-    alto, ancho = IMG_SIZE
-    assert alto % n == 0 and ancho % n == 0, f"una grilla de {n} no divide {IMG_SIZE}"
+    alto, ancho = tam
+    assert alto % n == 0 and ancho % n == 0, f"una grilla de {n} no divide {tuple(tam)}"
     celda = (alto // n, ancho // n)
     grilla = tf.nn.max_pool2d(mascaras, celda, celda, "VALID")
     return {"salida": tf.reduce_max(grilla, axis=(1, 2)), "grilla": grilla}
@@ -249,6 +253,40 @@ def self_check():
         assert dhash(a_png) == dhash(a_jpg), "la recompresion cambio el hash"
         assert dhash(a_png) != dhash(b_png), "dos escenas distintas dieron el mismo hash"
         assert sin_gemelo([a_png], [a_jpg, b_png]).tolist() == [False, True]
+
+        # tam opcional: el default sigue siendo IMG_SIZE (notebooks 4 y 5 intactos)
+        import inspect
+        for f in (leer_imagen, mascara_cajas, objetivos, armar_ds):
+            assert inspect.signature(f).parameters["tam"].default == IMG_SIZE, f.__name__
+
+        # 128x128 y grilla 16 (notebook 6): formas y contenido con TensorFlow.
+        try:
+            import tensorflow as tf
+        except ImportError:
+            tf = None
+        if tf is None:
+            print("self-check OK (sin TensorFlow: 128 y grilla 16 no verificados)")
+            return
+        grande = np.zeros((160, 120, 3), dtype=np.uint8)
+        grande[40:120, 30:90] = 200
+        Image.fromarray(grande).save(d / "g.jpg")
+        assert tuple(leer_imagen(str(d / "g.jpg")).shape) == (96, 96, 3)
+        assert tuple(leer_imagen(str(d / "g.jpg"), (128, 128)).shape) == (128, 128, 3)
+        # caja que cubre todo: mascara llena a los dos tamanos; la grilla 16x16 de
+        # 128 sale de celdas de 8x8 y la etiqueta de imagen es el maximo.
+        llena = [[0, 0.0, 0.0, 1.0, 1.0]]
+        m96 = mascara_cajas(llena).numpy()
+        m128 = mascara_cajas(llena, (128, 128)).numpy()
+        assert m96.shape == (96, 96, 2) and m128.shape == (128, 128, 2)
+        assert m96[..., 0].all() and not m96[..., 1].any()
+        assert m128[..., 0].all() and not m128[..., 1].any()
+        o = objetivos(tf.expand_dims(tf.convert_to_tensor(m128), 0), 16, (128, 128))
+        assert tuple(o["grilla"].shape) == (1, 16, 16, 2), o["grilla"].shape
+        assert o["grilla"].numpy()[0, ..., 0].all()
+        assert o["salida"].numpy().tolist() == [[1.0, 0.0]]
+        # el default viejo sigue dando la grilla 4x4 de 96
+        o4 = objetivos(tf.expand_dims(tf.convert_to_tensor(m96), 0), 4)
+        assert tuple(o4["grilla"].shape) == (1, 4, 4, 2), o4["grilla"].shape
 
     print("self-check OK")
 
