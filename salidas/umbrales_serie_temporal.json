@@ -1,0 +1,14 @@
+{
+  "th_tex": 0.3,
+  "th_dark": 10,
+  "th_sat": 0.25,
+  "tpr": 1.0,
+  "fpr": 0.0,
+  "empatados": 24,
+  "grilla": [
+    60,
+    16
+  ],
+  "franja_elev_grados": 5.0,
+  "persistencia_capturas": 2
+}

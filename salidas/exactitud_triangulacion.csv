@@ -1,0 +1,4 @@
+config,rmse_med_m,rmse_max_m,p95_med_m,rechazo_max
+2_nodos,39.0,113.4,44.6,
+3_nodos,20.3,75.4,22.2,
+punto_F_2n,4.5,,6.8,0.000

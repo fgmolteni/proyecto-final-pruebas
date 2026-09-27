@@ -1,0 +1,19 @@
+{
+  "D_m": 5000.0,
+  "W_pluma_m": 9.6,
+  "H_pluma_m": 27.5,
+  "V_cono_m3": 1167.0,
+  "V_elipsoide_m3": 1334.0,
+  "mc_vol_rel_2pct": 0.128,
+  "mc_vol_rel_10pct": 0.319,
+  "mc_vol_rel_30pct": 0.84,
+  "Byram_Lf_m": 1.5,
+  "Byram_I_kW_m": 627.0,
+  "severidad": "Moderada",
+  "respuesta": "difícil a mano; autobombas / cortafuegos",
+  "Briggs_dh_m": 120.0,
+  "viento_U_ms_EXTERNO": 5.0,
+  "Briggs_Fb_m4_s3": 585.938,
+  "Briggs_Qc_MW": 66.55,
+  "biomasa_kg_s": 5.93
+}
