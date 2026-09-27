@@ -87,7 +87,7 @@ def perfil(alpha=0.25, res=96, canales_in=1, clases=2, corte=None):
         raise ValueError(f"corte fuera de rango: {corte}")
 
     capas = []
-    h = w = res
+    h, w = (res, res) if isinstance(res, int) else res     # res: lado o (alto, ancho)
     c_in = canales_in
     cuerpo = MOBILENET_V1[:corte] if corte else MOBILENET_V1
 
@@ -269,6 +269,11 @@ def self_check():
     # escalar resolucion: MACs crecen con res^2
     r = perfil(0.25, 192, 1, 2)["macs"] / p["macs"]
     assert 3.5 < r < 4.5, f"res 96->192 multiplico MACs por {r:.2f}"
+
+    # no cuadrada: QVGA (240, 320) cuesta lo que su area, ~8.3x la de 96x96
+    r = perfil(0.25, (240, 320), 1, 2)["macs"] / p["macs"]
+    assert 7.5 < r < 9.0, f"96x96 -> 240x320 multiplico MACs por {r:.2f}"
+    assert perfil(0.25, (240, 320), 1, 2, corte=6)["grilla"] == (30, 40)
 
     # RGB cuesta mas que gris, pero poco: solo afecta a la primera capa
     r = perfil(0.25, 96, 3, 2)["macs"] / p["macs"]

@@ -35,8 +35,11 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-CLASES = ["fuego", "humo"]                          # una salida sigmoide por etiqueta
+CLASES = ["fuego", "humo"]                          # etiquetas binarias de las cajas YOLO
 COMBOS = ["nada", "humo", "fuego", "fuego+humo"]    # indice = 2*fuego + humo
+# Salida softmax de la red (notebooks 4 y 5): toda escena con llama es `incendio`, tenga
+# o no humo. Asi `fuego` (5 %) y `fuego+humo` (22 %) suman sus imagenes en una clase.
+CATEGORIAS = ["normal", "humo", "incendio"]
 IMG_SIZE = (96, 96)        # framesize nativo del OV2640: el firmware no reescala nada
 SPLITS = ("train", "val", "test")
 YOLO_A_CANAL = {"1": 0, "0": 1}   # clase YOLO -> indice en CLASES (1 = fuego, 0 = humo)
@@ -53,6 +56,12 @@ def combo(y):
     """Indice en COMBOS de una o varias etiquetas [fuego, humo]: 2*fuego + humo."""
     y = np.asarray(y)
     return (2 * y[..., 0] + y[..., 1]).astype(int)
+
+
+def categoria(y):
+    """Indice en CATEGORIAS de etiquetas [fuego, humo]: incendio si hay fuego, si no humo
+    o normal. Es el combo con `fuego` y `fuego+humo` juntos."""
+    return np.minimum(combo(y), 2)
 
 
 def indexar(data_dir):
@@ -217,6 +226,9 @@ def self_check():
             (d / f"{i}.txt").write_text(txt)
             assert etiqueta_imagen(d / f"{i}.txt") == esperado, (txt, esperado)
         assert [COMBOS[c] for c in combo([[0, 0], [0, 1], [1, 0], [1, 1]])] == COMBOS
+        # 3 categorias: fuego con o sin humo es incendio
+        assert [CATEGORIAS[c] for c in categoria([[0, 0], [0, 1], [1, 0], [1, 1]])] == \
+            ["normal", "humo", "incendio", "incendio"]
 
         # particion: disjunta, completa, respeta el split oficial y es deterministica
         splits = np.array(["train"] * 7 + ["val"] * 2 + ["test"] * 3)
