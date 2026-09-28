@@ -17,3 +17,5 @@ data/
 
 # salidas/ SI se versiona: el proyecto entrega todo el material y los datos generados
 # son parte de la evidencia. Si alguna vez pesa demasiado, ignorar sólo lo grande.
+# Los .zip son sólo para bajar corridas de Colab; se versiona la carpeta descomprimida
+salidas/**/*.zip
