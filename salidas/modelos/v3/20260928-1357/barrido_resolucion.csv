@@ -1,2 +1,0 @@
-version,corrida,fecha,archivo,alto,ancho,alpha,mmac,arena_kb,memoria,latencia_ms,epocas,exactitud_limpia,f1_macro_limpia,recall_incendio_limpia,incendio_a_normal_limpia,falsa_alarma_limpia,recall_incendio_caja_chica
-3,20260928-1357,2026-09-28T13:57-03:00,cnn_fuego_3clases_v3_epochs_124_image_size_320x240.keras,240,320,0.25,62.9,585,PSRAM,593,124,0.9313,0.9285,0.9418,0.011,0.0631,0.753

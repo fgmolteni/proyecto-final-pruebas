@@ -15,7 +15,5 @@ wheels/
 # datasets e info
 data/
 
-# salidas/ SI se versiona: el proyecto entrega todo el material y los datos generados
-# son parte de la evidencia. Si alguna vez pesa demasiado, ignorar sólo lo grande.
-# Los .zip son sólo para bajar corridas de Colab; se versiona la carpeta descomprimida
-salidas/**/*.zip
+# salidas/ (modelos, pesos, curvas) no se publica: se queda sólo en la máquina local
+salidas/
