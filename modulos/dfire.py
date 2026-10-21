@@ -89,15 +89,17 @@ def particion(splits, seed):
 
 # --- Imagenes (TensorFlow) ---------------------------------------------------
 def leer_imagen(ruta, tam=IMG_SIZE):
-    """JPEG -> tensor `tam` x 3 uint8: bilineal con antialias y redondeo.
+    """JPEG o BMP -> tensor `tam` x 3 uint8: bilineal con antialias y redondeo.
 
     `tam` default IMG_SIZE (96x96, lo que usan los notebooks 4 y 5): el notebook 6
     pasa (128, 128) explicito. Sin antialias, reducir fotos de hasta 1920x1080
-    crea aliasing y los penachos finos de humo se pierden.
+    crea aliasing y los penachos finos de humo se pierden. BMP: las capturas de la
+    camara (`Firmware/vision-slave/captura`), que ya vienen a QVGA.
     """
     import tensorflow as tf
-    img = tf.image.resize(tf.io.decode_jpeg(tf.io.read_file(ruta), channels=3), tam,
-                          antialias=True)
+    # expand_animations=False: decode_image devuelve siempre (alto, ancho, 3), como decode_jpeg.
+    img = tf.image.resize(tf.io.decode_image(tf.io.read_file(ruta), channels=3,
+                                             expand_animations=False), tam, antialias=True)
     return tf.cast(tf.round(img), tf.uint8)
 
 
