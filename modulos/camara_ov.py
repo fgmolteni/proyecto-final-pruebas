@@ -14,6 +14,11 @@ Cadena, en el orden físico (óptica -> sensor -> ISP):
     -> noche (escena oscura, fuentes de luz cálidas intactas) -> gamma -> saturación
     -> nitidez/desenfoque -> ruido (crece con la señal) -> nivel de negro -> RGB565
 
+Recalibrado el 2026-10-24 (día, `P_NOCHE = 0`, 400 D-Fire vs capturas con mediana L >= 30): color medido en
+neutros claros (poco saturados, L 120-235), que no depende de que la escena sea pasto; p50 / L<20 / clip:
+D-Fire 66 / 23 % / 1 %, cámara 84 / 7 % / 14 %, filtro 89 / 20 % / 15 %; neutros R/G B/G: 0,99 1,04 /
+0,94 0,92 / 0,95 0,94. La tabla de abajo es la medición anterior (2026-10-20, filtro más oscuro).
+
 Rangos medidos el 2026-10-20 con `estadisticas()` sobre `data/capturas/` (todas a QVGA, ~150
 por grupo) contra 177 fotos de D-Fire train, y lo que da el filtro sobre esas mismas D-Fire:
 
@@ -55,15 +60,15 @@ import tensorflow as tf
 from tensorflow import keras
 
 # Rangos U(lo, hi) por imagen. Ver la tabla del docstring.
-GANANCIA_R = (0.78, 1.02)    # R/G de la cámara ≈ 0,90 × el de D-Fire (día)
-GANANCIA_B = (0.78, 1.00)    # B/G ≈ 0,89 ×
-EXPOSICION = (0.90, 1.60)    # altas luces más arriba y quemadas (clip 2,9 % -> ~10 %)
-GAMMA = (1.00, 1.60)         # >1 cierra sombras y medios: la cámara tiene más contraste que D-Fire
+GANANCIA_R = (0.84, 1.02)    # R/G en neutros claros (cielo, muro): cámara 0,94 vs D-Fire 0,99
+GANANCIA_B = (0.72, 0.96)    # B/G en neutros claros: cámara 0,92 vs D-Fire 1,04
+EXPOSICION = (1.00, 1.85)    # el AEC de la cámara levanta las escenas oscuras: p50 66 -> ~85, clip 1 % -> ~14 %
+GAMMA = (0.95, 1.25)         # >1 cierra sombras y medios; con más no queda negro lifteado como el real
 SATURACION = (0.90, 1.30)
 NITIDEZ = (-0.8, 0.8)        # >0 máscara de enfoque del ISP; <0 desenfoque (óptica, VGA->QVGA)
 RUIDO = (1.5, 6.0)           # sigma del ruido en niveles 0-255, a señal media (crece con la señal)
-NEGRO = (0.0, 0.10)          # nivel de negro recortado: aplasta las sombras (p10 más bajo)
-VINETEO = (0.0, 0.45)        # caída de brillo en las esquinas (1 - v·r²)
+NEGRO = (0.0, 0.03)          # nivel de negro recortado; más aplastaba la mitad de la imagen (L<20 34 % vs 7 % real)
+VINETEO = (0.0, 0.35)        # caída de brillo en las esquinas (1 - v·r²)
 
 P_NOCHE = 0.20               # fracción de imágenes llevadas a noche
 NOCHE = (0.10, 0.40)         # factor sobre lo que no es fuente de luz cálida (p50 81 -> ~10)
